@@ -1,0 +1,189 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from datetime import timedelta
+
+from app.db.session import get_db
+from app.models import User
+from app.schemas.auth import (
+    UserRegister, UserLogin, TokenResponse, UserResponse, TokenRequest
+)
+from app.core.security import PasswordManager, TokenManager
+from app.core.config import settings
+
+router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
+
+
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
+    """Register a new user"""
+    
+    # Check if email already exists
+    result = await db.execute(select(User).where(User.email == user_data.email))
+    existing_user = result.scalar_one_or_none()
+    
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Check if username already exists
+    result = await db.execute(select(User).where(User.username == user_data.username))
+    existing_username = result.scalar_one_or_none()
+    
+    if existing_username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken"
+        )
+    
+    # Create new user
+    hashed_password = PasswordManager.hash_password(user_data.password)
+    
+    new_user = User(
+        email=user_data.email,
+        username=user_data.username,
+        full_name=user_data.full_name,
+        hashed_password=hashed_password,
+        is_verified=False,
+        credits=5,  # Free tier credits
+    )
+    
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+    
+    return new_user
+
+
+@router.post("/login", response_model=TokenResponse)
+async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
+    """Login user with email and password"""
+    
+    # Find user by email
+    result = await db.execute(select(User).where(User.email == credentials.email))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Verify password
+    if not PasswordManager.verify_password(credentials.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is inactive"
+        )
+    
+    # Create tokens
+    token_data = {"sub": user.id, "email": user.email}
+    access_token = TokenManager.create_access_token(subject=token_data)
+    refresh_token = TokenManager.create_refresh_token(subject=token_data)
+    
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
+
+
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(token_request: TokenRequest, db: AsyncSession = Depends(get_db)):
+    """Refresh access token using refresh token"""
+    
+    # Decode refresh token
+    payload = TokenManager.decode_token(token_request.refresh_token)
+    
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token"
+        )
+    
+    user_id: int = payload.get("sub")
+    
+    # Verify user still exists and is active
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive"
+        )
+    
+    # Create new access token
+    token_data = {"sub": user.id, "email": user.email}
+    new_access_token = TokenManager.create_access_token(subject=token_data)
+    new_refresh_token = TokenManager.create_refresh_token(subject=token_data)
+    
+    return TokenResponse(
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user(
+    authorization: str = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get current authenticated user"""
+    
+    if not authorization:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+    
+    # Extract token from Bearer scheme
+    try:
+        scheme, token = authorization.split()
+        if scheme.lower() != "bearer":
+            raise ValueError
+    except (ValueError, IndexError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authorization header"
+        )
+    
+    # Decode token
+    payload = TokenManager.decode_token(token)
+    
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+    
+    user_id: int = payload.get("sub")
+    
+    # Get user from database
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+    
+    return user
+
+
+@router.post("/logout", status_code=status.HTTP_200_OK)
+async def logout():
+    """Logout user (token invalidation handled client-side)"""
+    return {"message": "Logged out successfully"}

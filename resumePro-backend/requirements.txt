@@ -1,0 +1,14 @@
+fastapi[all]                 # Framework + Uvicorn + Pydantic
+sqlalchemy[asyncio]          # Modern Async ORM
+asyncpg                      # Async PostgreSQL driver
+python-jose[cryptography]    # JWT tokens
+passlib[bcrypt]              # Password hashing
+google-cloud-storage         # GCP Storage SDK
+google-generativeai          # Gemini AI SDK
+python-multipart             # File upload support
+pypdf2                       # PDF text extraction
+email-validator              # Email validation
+python-dotenv                # Environment variable management
+pydantic[email]              # Data validation with email support
+alembic                      # Database migration tool
+psycopg2-binary              # PostgreSQL driver for Alembic migrations
