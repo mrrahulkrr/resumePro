@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Suspense, useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
@@ -49,7 +49,7 @@ JavaScript, TypeScript, React, Node.js, Python, AWS, Docker, PostgreSQL
 
 \\end{document}`
 
-export default function EditorPage() {
+function EditorContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const resumeId = searchParams.get("id")
@@ -500,5 +500,17 @@ export default function EditorPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function EditorPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    }>
+      <EditorContent />
+    </Suspense>
   )
 }

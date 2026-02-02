@@ -13,3 +13,4 @@ python-dotenv                # Environment variable management
 pydantic[email]              # Data validation with email support
 alembic                      # Database migration tool
 psycopg2-binary              # PostgreSQL driver for Alembic migrations
+gunicorn==21.2.0
