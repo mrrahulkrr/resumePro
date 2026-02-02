@@ -13,11 +13,17 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { uploadFormSchema, type UploadFormValues } from "@/lib/validations/upload"
-import { Upload, AlertCircle } from "lucide-react"
+import { Upload, AlertCircle, Loader2, FileText, CheckCircle2 } from "lucide-react"
+import { api } from "@/lib/api"
+import { useToast } from "@/components/ui/use-toast"
+import type { Resume } from "@/types/resume"
 
 export default function UploadPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [isParsing, setIsParsing] = useState(false)
+  const [parsedText, setParsedText] = useState<string | null>(null)
   const [dragActive, setDragActive] = useState(false)
 
   const {
@@ -32,18 +38,102 @@ export default function UploadPage() {
 
   const resumeFile = watch("resume")
 
+  // Handle file parsing when a file is selected
+  const parseFile = async (file: File) => {
+    setIsParsing(true)
+    setParsedText(null)
+    try {
+      const result = await api.uploadFile<{ filename: string; text: string; char_count: number }>(
+        "/api/v1/resumes/parse-file",
+        file
+      )
+      setParsedText(result.text)
+      toast({
+        title: "File Parsed",
+        description: `Extracted ${result.char_count.toLocaleString()} characters from ${result.filename}`,
+      })
+    } catch (error: any) {
+      console.error("Failed to parse file:", error)
+      toast({
+        variant: "destructive",
+        title: "Parse Failed",
+        description: error.message || "Could not extract text from file.",
+      })
+    } finally {
+      setIsParsing(false)
+    }
+  }
+
   const onSubmit = async (data: UploadFormValues) => {
+    if (!parsedText) {
+      toast({
+        variant: "destructive",
+        title: "No Resume Content",
+        description: "Please upload a resume file first.",
+      })
+      return
+    }
+
     setIsLoading(true)
     try {
-      // Simulate validation and processing
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      // Navigate to results page with mock data
-      router.push("/results")
-    } catch (error) {
+      // Create a basic LaTeX document from the parsed text
+      const latexContent = generateLatexFromText(parsedText)
+      
+      // Create a new resume
+      const newResume = await api.post<Resume>("/api/v1/resumes", {
+        title: data.resume.name.replace(/\.(pdf|txt)$/i, "") || "Uploaded Resume",
+        content: latexContent,
+        job_description: data.jobDescription,
+      })
+
+      if (newResume && newResume.id) {
+        // Analyze the resume
+        try {
+          await api.post<Resume>(`/api/v1/resumes/${newResume.id}/analyze`)
+        } catch (e) {
+          console.log("Analysis skipped - continuing to editor")
+        }
+        
+        // Navigate to editor
+        router.push(`/editor?id=${newResume.id}`)
+      }
+    } catch (error: any) {
       console.error("Error:", error)
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description: error.message || "Could not process your resume.",
+      })
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Generate a basic LaTeX document from plain text
+  const generateLatexFromText = (text: string): string => {
+    // Escape LaTeX special characters
+    const escaped = text
+      .replace(/\\/g, "\\textbackslash{}")
+      .replace(/[&%$#_{}]/g, (match) => `\\${match}`)
+      .replace(/~/g, "\\textasciitilde{}")
+      .replace(/\^/g, "\\textasciicircum{}")
+      .replace(/\n\n+/g, "\n\n\\vspace{8pt}\n\n")
+    
+    return `\\documentclass[11pt,a4paper]{article}
+\\usepackage[margin=0.75in]{geometry}
+\\usepackage{hyperref}
+\\usepackage{enumitem}
+
+\\pagestyle{empty}
+
+\\begin{document}
+
+% Imported from: ${resumeFile?.name || "uploaded file"}
+% Please edit the LaTeX below to improve formatting
+
+${escaped}
+
+\\end{document}`
   }
 
   const handleDrag = (e: React.DragEvent) => {
@@ -64,6 +154,7 @@ export default function UploadPage() {
     const files = e.dataTransfer.files
     if (files && files[0]) {
       setValue("resume", files[0])
+      parseFile(files[0])
     }
   }
 
@@ -106,7 +197,9 @@ export default function UploadPage() {
                     {...register("resume")}
                     onChange={(e) => {
                       if (e.target.files?.[0]) {
-                        setValue("resume", e.target.files[0])
+                        const file = e.target.files[0]
+                        setValue("resume", file)
+                        parseFile(file)
                       }
                     }}
                     id="resume-input"
@@ -115,10 +208,31 @@ export default function UploadPage() {
                     type="button"
                     variant="outline"
                     onClick={() => document.getElementById("resume-input")?.click()}
+                    disabled={isParsing}
                   >
-                    Choose File
+                    {isParsing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Parsing...
+                      </>
+                    ) : (
+                      "Choose File"
+                    )}
                   </Button>
-                  {resumeFile && <p className="text-sm text-primary mt-3">✓ {resumeFile.name}</p>}
+                  {resumeFile && (
+                    <div className="mt-3">
+                      <p className="text-sm text-primary flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        {resumeFile.name}
+                      </p>
+                      {parsedText && (
+                        <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                          <CheckCircle2 className="w-3 h-3" />
+                          {parsedText.length.toLocaleString()} characters extracted
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {errors.resume && (
                   <div className="mt-2 flex items-center gap-2 text-destructive text-sm">
@@ -148,8 +262,15 @@ export default function UploadPage() {
 
               {/* Submit Button */}
               <div className="flex gap-3">
-                <Button type="submit" size="lg" disabled={isLoading} className="flex-1">
-                  {isLoading ? "Analyzing..." : "Analyze Resume"}
+                <Button type="submit" size="lg" disabled={isLoading || isParsing || !parsedText} className="flex-1">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Analyze & Open in Editor"
+                  )}
                 </Button>
                 <Button type="button" variant="outline" size="lg" asChild>
                   <Link href="/">Cancel</Link>

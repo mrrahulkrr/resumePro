@@ -1,5 +1,6 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi.responses import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -190,3 +191,87 @@ async def download_resume(
             "Content-Disposition": f'attachment; filename="{filename}"'
         }
     )
+
+
+@router.get("/{resume_id}/preview", status_code=status.HTTP_200_OK)
+async def preview_resume(
+    resume_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Compile and return the resume as PDF for preview (inline display)"""
+    # 1. Fetch Resume
+    result = await db.execute(
+        select(Resume).where(Resume.id == resume_id, Resume.user_id == current_user.id)
+    )
+    resume = result.scalar_one_or_none()
+    
+    if not resume:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resume not found"
+        )
+    
+    # 2. Compile LaTeX to PDF
+    from app.services.pdf_service import pdf_service
+    pdf_content = await pdf_service.compile_latex(resume.content)
+    
+    if not pdf_content:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate PDF. Please check your LaTeX syntax."
+        )
+    
+    # 3. Return as inline PDF (for preview in browser)
+    return Response(
+        content=pdf_content,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": "inline"
+        }
+    )
+
+
+@router.post("/parse-file")
+async def parse_uploaded_file(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Parse an uploaded resume file (PDF or TXT) and extract text content.
+    Returns the extracted text for further processing.
+    """
+    # Validate file type
+    allowed_types = [".pdf", ".txt"]
+    filename = file.filename or "unknown"
+    
+    if not any(filename.lower().endswith(ext) for ext in allowed_types):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported file type. Allowed types: {', '.join(allowed_types)}"
+        )
+    
+    # Read file content
+    try:
+        content = await file.read()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to read file: {str(e)}"
+        )
+    
+    # Extract text
+    from app.services.file_parser import extract_text_from_file
+    extracted_text = extract_text_from_file(content, filename)
+    
+    if not extracted_text:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Could not extract text from file. Please ensure the file is not corrupted."
+        )
+    
+    return {
+        "filename": filename,
+        "text": extracted_text,
+        "char_count": len(extracted_text)
+    }

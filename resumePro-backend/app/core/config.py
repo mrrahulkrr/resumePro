@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     
     # Database
     DATABASE_URL: Optional[str] = None
+    DATABASE_URL_SYNC: Optional[str] = None
     
     # JWT/Security
     SECRET_KEY: str = "your-secret-key-change-in-production"
@@ -21,6 +22,7 @@ class Settings(BaseSettings):
     # GCP
     GCP_PROJECT_ID: Optional[str] = None
     GCP_BUCKET_NAME: Optional[str] = None
+    GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
     
     # AI
     GEMINI_API_KEY: Optional[str] = None
@@ -29,5 +31,6 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
+        extra = "ignore"
 
 settings = Settings()

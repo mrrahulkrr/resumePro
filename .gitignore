@@ -1,0 +1,11 @@
+# Project documentation (development/internal use)
+ARCHITECTURE.md
+IMPLEMENTATION_CHECKLIST.md
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

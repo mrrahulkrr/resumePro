@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Enum
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.sql import func
 import enum
 from app.models.base import Base
@@ -9,6 +10,14 @@ class AuthProvider(str, enum.Enum):
     EMAIL = "email"
     GOOGLE = "google"
     GITHUB = "github"
+
+
+# Create PostgreSQL enum that uses lowercase values
+AuthProviderEnum = PgEnum(
+    'email', 'google', 'github',
+    name='authprovider',
+    create_type=False  # Already created in migration
+)
 
 
 class User(Base):
@@ -36,7 +45,7 @@ class User(Base):
     credits = Column(Integer, default=5)  # Free tier credits
     
     # OAuth Provider Information
-    auth_provider = Column(Enum(AuthProvider), default=AuthProvider.EMAIL)
+    auth_provider = Column(AuthProviderEnum, default='email')
     provider_id = Column(String(255), nullable=True)  # OAuth provider user ID
     
     # Timestamps

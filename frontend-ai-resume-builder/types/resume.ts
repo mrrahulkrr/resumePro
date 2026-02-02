@@ -32,3 +32,12 @@ export interface ResumeUpdate {
     ats_score?: number
     is_tailored?: boolean
 }
+
+export interface ResumeTemplate {
+    id: string
+    name: string
+    category: string
+    description: string
+    color: string
+    content?: string // Only included when fetching single template
+}

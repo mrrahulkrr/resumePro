@@ -118,5 +118,6 @@ export const authConfig = {
   },
   trustHost: true,
 }
+const handler = NextAuth(authConfig)
 
-export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
+export { handler }

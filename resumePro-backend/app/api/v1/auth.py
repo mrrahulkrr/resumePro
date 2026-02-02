@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from datetime import timedelta
@@ -48,6 +48,7 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
         hashed_password=hashed_password,
         is_verified=False,
         credits=5,  # Free tier credits
+        auth_provider='email',  # Explicitly set lowercase for PostgreSQL enum
     )
     
     db.add(new_user)
@@ -86,8 +87,8 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
             detail="User account is inactive"
         )
     
-    # Create tokens
-    token_data = {"sub": user.id, "email": user.email}
+    # Create tokens - sub must be a string for JWT
+    token_data = {"sub": str(user.id), "email": user.email}
     access_token = TokenManager.create_access_token(subject=token_data)
     refresh_token = TokenManager.create_refresh_token(subject=token_data)
     
@@ -111,7 +112,7 @@ async def refresh_token(token_request: TokenRequest, db: AsyncSession = Depends(
             detail="Invalid or expired refresh token"
         )
     
-    user_id: int = payload.get("sub")
+    user_id = int(payload.get("sub"))
     
     # Verify user still exists and is active
     result = await db.execute(select(User).where(User.id == user_id))
@@ -123,8 +124,8 @@ async def refresh_token(token_request: TokenRequest, db: AsyncSession = Depends(
             detail="User not found or inactive"
         )
     
-    # Create new access token
-    token_data = {"sub": user.id, "email": user.email}
+    # Create new access token - sub must be string for JWT
+    token_data = {"sub": str(user.id), "email": user.email}
     new_access_token = TokenManager.create_access_token(subject=token_data)
     new_refresh_token = TokenManager.create_refresh_token(subject=token_data)
     
@@ -137,10 +138,12 @@ async def refresh_token(token_request: TokenRequest, db: AsyncSession = Depends(
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user(
-    authorization: str = None,
+    authorization: str | None = Header(default=None, alias="Authorization"),
     db: AsyncSession = Depends(get_db)
 ):
     """Get current authenticated user"""
+    
+    print(f"Authorization header: {authorization}")  # Debug log
     
     if not authorization:
         raise HTTPException(
@@ -151,6 +154,7 @@ async def get_current_user(
     # Extract token from Bearer scheme
     try:
         scheme, token = authorization.split()
+        print(f"Scheme: {scheme}, Token: {token[:20]}...")  # Debug log
         if scheme.lower() != "bearer":
             raise ValueError
     except (ValueError, IndexError):
@@ -161,6 +165,7 @@ async def get_current_user(
     
     # Decode token
     payload = TokenManager.decode_token(token)
+    print(f"Decoded payload: {payload}")  # Debug log
     
     if not payload:
         raise HTTPException(
@@ -168,7 +173,7 @@ async def get_current_user(
             detail="Invalid or expired token"
         )
     
-    user_id: int = payload.get("sub")
+    user_id = int(payload.get("sub"))
     
     # Get user from database
     result = await db.execute(select(User).where(User.id == user_id))

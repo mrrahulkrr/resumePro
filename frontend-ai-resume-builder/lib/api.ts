@@ -27,6 +27,17 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   return headers
 }
 
+async function getAuthHeadersWithoutContentType(): Promise<HeadersInit> {
+  const session: Session | null = await getSession()
+  const headers: HeadersInit = {}
+
+  if (session && (session as any).accessToken) {
+    headers.Authorization = `Bearer ${(session as any).accessToken}`
+  }
+
+  return headers
+}
+
 export async function fetchApi<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -88,5 +99,38 @@ export const api = {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+  },
+  uploadFile: async <T,>(endpoint: string, file: File): Promise<T> => {
+    const headers = await getAuthHeadersWithoutContentType();
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      const error = await response.text();
+      try {
+        const errorData = JSON.parse(error);
+        throw new ApiError(response.status, response.statusText, errorData.detail || response.statusText);
+      } catch (e) {
+        if (e instanceof ApiError) throw e;
+        throw new ApiError(response.status, response.statusText, error);
+      }
+    }
+    
+    return response.json() as Promise<T>;
+  },
+  getPreviewUrl: async (endpoint: string): Promise<string> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+      headers,
+    });
+    if (!response.ok) throw new Error("Preview failed");
+    const blob = await response.blob();
+    return window.URL.createObjectURL(blob);
   },
 }

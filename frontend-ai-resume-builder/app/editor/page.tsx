@@ -10,7 +10,7 @@ import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { editorFormSchema, type EditorFormValues } from "@/lib/validations/editor"
-import { Download, Wand2, AlertCircle, Save, Sparkles, CheckCircle2 } from "lucide-react"
+import { Download, Wand2, AlertCircle, Save, Sparkles, CheckCircle2, Eye, Loader2, X } from "lucide-react"
 import { api } from "@/lib/api"
 import type { Resume, ResumeAnalysisResult } from "@/types/resume"
 import { useToast } from "@/components/ui/use-toast"
@@ -58,6 +58,8 @@ export default function EditorPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isPreviewing, setIsPreviewing] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [showNotification, setShowNotification] = useState(false)
   const [analysisResult, setAnalysisResult] = useState<ResumeAnalysisResult | null>(null)
 
@@ -204,6 +206,43 @@ export default function EditorPage() {
     }
   }
 
+  const handlePreview = async () => {
+    if (!resumeId) {
+        toast({
+            title: "Save First",
+            description: "Please save your resume before previewing.",
+        })
+        return
+    }
+
+    setIsPreviewing(true)
+    try {
+        // Clean up previous preview URL
+        if (previewUrl) {
+            window.URL.revokeObjectURL(previewUrl)
+        }
+        
+        const url = await api.getPreviewUrl(`/api/v1/resumes/${resumeId}/preview`)
+        setPreviewUrl(url)
+    } catch (error) {
+        console.error("Preview failed:", error)
+        toast({
+            variant: "destructive",
+            title: "Preview Failed",
+            description: "Could not generate preview. Please ensure your LaTeX is valid."
+        })
+    } finally {
+        setIsPreviewing(false)
+    }
+  }
+
+  const closePreview = () => {
+    if (previewUrl) {
+        window.URL.revokeObjectURL(previewUrl)
+    }
+    setPreviewUrl(null)
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -232,6 +271,10 @@ export default function EditorPage() {
               <Button type="submit" onClick={handleSubmit(onSubmit)} disabled={isSaving} className="gap-2">
                 <Save className="w-4 h-4" />
                 {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+              <Button variant="outline" onClick={handlePreview} disabled={isPreviewing || !resumeId}>
+                <Eye className="w-4 h-4 mr-2" />
+                {isPreviewing ? "Loading..." : "Preview PDF"}
               </Button>
               <Button variant="outline" onClick={handleDownload} disabled={isDownloading}>
                 <Download className="w-4 h-4 mr-2" />
@@ -363,25 +406,51 @@ export default function EditorPage() {
                 <div className="flex flex-col">
                   <label className="text-sm font-semibold mb-2 flex items-center gap-2">
                     <span>Preview</span>
-                    <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">Live</span>
+                    {previewUrl && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 px-2 text-xs"
+                        onClick={closePreview}
+                      >
+                        <X className="w-3 h-3 mr-1" />
+                        Close
+                      </Button>
+                    )}
                   </label>
-                  <div className="flex-1 bg-white border-2 border-border rounded-lg p-6 overflow-auto shadow-sm max-h-[600px]">
-                    <div className="prose prose-sm max-w-none text-foreground">
-                      {/* Simplified Preview for now - in real app this would actully render LaTeX */}
-                      <p className="text-muted-foreground text-sm italic text-center py-10">
-                        Preview is simplified. <br/> 
-                        Download PDF to see exact formatting.
-                      </p>
-                       <div className="space-y-4 opacity-50 pointer-events-none">
-                        <div>
-                          <h2 className="text-2xl font-bold">John Doe</h2>
-                          <p className="text-sm text-muted-foreground">
-                            Email: john@example.com | Phone: (555) 123-4567
-                          </p>
-                        </div>
-                        {/* ... truncated preview content ... */}
+                  <div className="flex-1 bg-white border-2 border-border rounded-lg overflow-hidden shadow-sm" style={{ height: "600px" }}>
+                    {previewUrl ? (
+                      <iframe 
+                        src={previewUrl}
+                        className="w-full h-full"
+                        title="Resume Preview"
+                      />
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center text-center p-6">
+                        {isPreviewing ? (
+                          <>
+                            <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
+                            <p className="text-sm text-muted-foreground">Compiling LaTeX...</p>
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-12 h-12 text-muted-foreground/30 mb-3" />
+                            <p className="text-muted-foreground text-sm mb-4">
+                              Click &quot;Preview PDF&quot; to see your resume
+                            </p>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={handlePreview}
+                              disabled={!resumeId}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              Generate Preview
+                            </Button>
+                          </>
+                        )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>

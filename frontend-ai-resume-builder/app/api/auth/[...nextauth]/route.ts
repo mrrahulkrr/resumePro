@@ -1,3 +1,5 @@
-import { handlers } from "@/auth"
+import { handler } from "@/auth"
 
-export const { GET, POST } = handlers
+export const runtime = "nodejs"
+
+export { handler as GET, handler as POST }

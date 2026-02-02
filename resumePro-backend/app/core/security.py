@@ -57,13 +57,20 @@ class TokenManager:
                 settings.SECRET_KEY,
                 algorithms=[settings.ALGORITHM]
             )
+            print(f"JWT decode success: {payload}")  # Debug
             user_id: int = payload.get("sub")
             if user_id is None:
+                print("No 'sub' in payload")  # Debug
                 return None
             return payload
-        except jwt.ExpiredSignatureError:
+        except jwt.ExpiredSignatureError as e:
+            print(f"JWT expired: {e}")  # Debug
             return None
-        except jwt.InvalidTokenError:
+        except jwt.InvalidTokenError as e:
+            print(f"JWT invalid: {e}")  # Debug
+            return None
+        except Exception as e:
+            print(f"JWT other error: {type(e).__name__}: {e}")  # Debug
             return None
     
     @staticmethod
