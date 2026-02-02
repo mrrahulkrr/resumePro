@@ -15,11 +15,15 @@ const CreditContext = createContext<CreditContextType | undefined>(undefined)
 export function CreditProvider({ children }: { children: React.ReactNode }) {
   const maxCredits = 100
   const [credits, setCredits] = useState(maxCredits)
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    const savedCredits = localStorage.getItem("resumepro_credits")
-    if (savedCredits !== null) {
-      setCredits(Number.parseInt(savedCredits, 10))
+    setIsClient(true)
+    if (typeof window !== 'undefined') {
+      const savedCredits = localStorage.getItem("resumepro_credits")
+      if (savedCredits !== null) {
+        setCredits(Number.parseInt(savedCredits, 10))
+      }
     }
   }, [])
 
@@ -27,7 +31,9 @@ export function CreditProvider({ children }: { children: React.ReactNode }) {
     if (credits >= amount) {
       const newBalance = credits - amount
       setCredits(newBalance)
-      localStorage.setItem("resumepro_credits", newBalance.toString())
+      if (typeof window !== 'undefined') {
+        localStorage.setItem("resumepro_credits", newBalance.toString())
+      }
       return true
     }
     return false
@@ -36,7 +42,9 @@ export function CreditProvider({ children }: { children: React.ReactNode }) {
   const addCredits = (amount: number) => {
     const newBalance = Math.min(credits + amount, maxCredits)
     setCredits(newBalance)
-    localStorage.setItem("resumepro_credits", newBalance.toString())
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("resumepro_credits", newBalance.toString())
+    }
   }
 
   return (
