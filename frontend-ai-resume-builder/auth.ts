@@ -116,8 +116,9 @@ export const authConfig = {
   jwt: {
     maxAge: 30 * 60, // 30 minutes
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || "development-secret-change-in-production",
   trustHost: true,
+  debug: process.env.NODE_ENV === "development",
 }
 const handler = NextAuth(authConfig)
 
