@@ -6,19 +6,16 @@ import { getToken } from "next-auth/jwt"
 const protectedRoutes = ["/dashboard", "/editor", "/results", "/ats-tools", "/templates"]
 
 export default async function middleware(req: NextRequest) {
-  // Skip middleware if secret is not configured (allow page to render)
-  if (!process.env.NEXTAUTH_SECRET) {
-    return NextResponse.next()
-  }
+  const secret = process.env.NEXTAUTH_SECRET || "development-secret-change-in-production"
 
   let token = null
   try {
-    token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
+    token = await getToken({ req, secret })
   } catch (error) {
     // If token decryption fails, treat as not logged in
     console.error("Token verification failed:", error)
   }
-  
+
   const isLoggedIn = !!token
   const { pathname } = req.nextUrl
 
