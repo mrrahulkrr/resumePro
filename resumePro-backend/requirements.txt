@@ -1,7 +1,7 @@
 fastapi[all]                 # Framework + Uvicorn + Pydantic
 sqlalchemy[asyncio]          # Modern Async ORM
 asyncpg                      # Async PostgreSQL driver
-python-jose[cryptography]    # JWT tokens
+PyJWT                        # JWT tokens
 passlib[bcrypt]==1.7.4       # Password hashing
 bcrypt==4.0.1                # Pin bcrypt for passlib compatibility
 google-cloud-storage         # GCP Storage SDK
