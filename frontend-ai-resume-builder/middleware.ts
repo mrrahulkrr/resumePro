@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { getToken } from "next-auth/jwt"
 
 // Protected routes that require authentication
 const protectedRoutes = ["/dashboard", "/editor", "/results", "/ats-tools", "/templates"]
@@ -12,22 +11,27 @@ export default async function middleware(req: NextRequest) {
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route))
   const isAuthPage = pathname.startsWith("/auth/")
 
-  // Optimization: If the route is public and not an auth page, allow access without invoking token check
-  // This avoids potential Edge Runtime errors with getToken() on public pages
+  // If no secret is configured, skip auth checks entirely (allows page to render)
+  const secret = process.env.NEXTAUTH_SECRET
+  if (!secret) {
+    // No auth configured - allow all access
+    return NextResponse.next()
+  }
+
+  // For public pages, allow access without token check
   if (!isProtected && !isAuthPage) {
     return NextResponse.next()
   }
 
-  // Use a fallback secret to prevent runtime crashes if env var is missing
-  const secret = process.env.NEXTAUTH_SECRET || "development-secret-change-in-production"
-
+  // Dynamic import to avoid edge runtime issues
   let token = null
   try {
-    // Only call getToken if we really need it
+    const { getToken } = await import("next-auth/jwt")
     token = await getToken({ req, secret })
   } catch (error) {
-    // Log error but don't crash middleware if possible
-    console.error("Token verification failed:", error)
+    // If token check fails, allow access and let the page handle auth
+    console.error("Middleware token check failed:", error)
+    return NextResponse.next()
   }
 
   const isLoggedIn = !!token
@@ -48,6 +52,14 @@ export default async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Exclude static files, generic api routes (unless we specifically want to protect them), and next internals
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/health).*)"],
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization)
+     * - favicon.ico (favicon file)
+     * - public folder files
+     * - api routes (handled separately)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|api|.*\\..*).*)"],
 }
