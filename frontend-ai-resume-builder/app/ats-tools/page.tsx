@@ -16,7 +16,6 @@ import { uploadFormSchema, type UploadFormValues } from "@/lib/validations/uploa
 import { Upload, AlertCircle, FileCheck2, Sparkles, Zap } from "lucide-react"
 import { useCredits } from "@/lib/credit-context"
 
-export const dynamic = 'force-dynamic'
 
 export default function ATSToolsPage() {
   const router = useRouter()

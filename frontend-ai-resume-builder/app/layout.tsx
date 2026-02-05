@@ -9,8 +9,6 @@ import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
-export const dynamic = 'force-dynamic'
-
 export const metadata: Metadata = {
   title: "ResumePro - AI-Powered Résumé Builder",
   description: "Optimize your resume with AI-powered analysis and suggestions",

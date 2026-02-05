@@ -9,7 +9,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 
-export const dynamic = 'force-dynamic'
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
