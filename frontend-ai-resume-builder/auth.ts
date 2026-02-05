@@ -4,6 +4,11 @@ import type { Session } from "next-auth"
 import type { JWT } from "next-auth/jwt"
 import { z } from "zod"
 
+// @ts-ignore
+if (typeof __dirname === 'undefined') globalThis.__dirname = '';
+// @ts-ignore
+if (typeof __filename === 'undefined') globalThis.__filename = '';
+
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
 
 // Extend types
