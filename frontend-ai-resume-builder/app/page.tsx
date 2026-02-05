@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
 
+export const dynamic = 'force-dynamic'
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Target, Sparkles, ArrowRight, ShieldCheck, Cpu } from "lucide-react"
