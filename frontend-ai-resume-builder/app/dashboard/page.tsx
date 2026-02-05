@@ -8,7 +8,7 @@ import { Footer } from "@/components/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useCredits } from "@/lib/credit-context"
-import { FileText, BarChart3, Clock, CreditCard, Plus, Download, ExternalLink, Search, TrendingUp, Edit } from "lucide-react"
+import { FileText, BarChart3, Clock, CreditCard, Plus, Download, ExternalLink, Search, TrendingUp, Edit, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Area, AreaChart } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
@@ -281,6 +281,23 @@ export default function DashboardPage() {
                             <div className="text-xs text-muted-foreground">Score</div>
                             <div className="font-bold text-sm text-primary">{resume.ats_score || 0}%</div>
                           </div>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={async () => {
+                              if (confirm("Are you sure you want to delete this resume?")) {
+                                try {
+                                  await api.delete(`/api/v1/resumes/${resume.id}`)
+                                  setResumes(prev => prev.filter(r => r.id !== resume.id))
+                                } catch (e) {
+                                  alert("Failed to delete resume")
+                                }
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                           <Button size="icon" variant="ghost" asChild>
                             <Link href={`/editor?id=${resume.id}`}>
                                 <Edit className="w-4 h-4" />

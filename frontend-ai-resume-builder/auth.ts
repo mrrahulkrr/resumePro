@@ -20,11 +20,13 @@ declare module "next-auth" {
       email?: string
       name?: string
       image?: string | null
+      credits?: number
     }
   }
   interface User {
     accessToken?: string
     refreshToken?: string
+    credits?: number
   }
 }
 
@@ -32,6 +34,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     accessToken?: string
     refreshToken?: string
+    credits?: number
   }
 }
 
@@ -86,6 +89,7 @@ export const authConfig = {
             image: user.profile_picture,
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
+            credits: user.credits,
           }
         } catch (error) {
           return null
@@ -102,6 +106,7 @@ export const authConfig = {
       if (user) {
         token.accessToken = user.accessToken
         token.refreshToken = user.refreshToken
+        token.credits = user.credits
       }
       return token
     },
@@ -109,6 +114,7 @@ export const authConfig = {
       if (session.user) {
         session.user.id = token.sub
         session.accessToken = token.accessToken
+        session.user.credits = token.credits
       }
       return session
     },

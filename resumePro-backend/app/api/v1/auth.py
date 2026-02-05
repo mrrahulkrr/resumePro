@@ -47,7 +47,7 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
         full_name=user_data.full_name,
         hashed_password=hashed_password,
         is_verified=False,
-        credits=5,  # Free tier credits
+        credits=50,  # Free tier credits
         auth_provider='email',  # Explicitly set lowercase for PostgreSQL enum
     )
     

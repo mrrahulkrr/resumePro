@@ -1,54 +1,49 @@
-"use client"
-
-import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 
 interface CreditContextType {
   credits: number
   maxCredits: number
-  useCredits: (amount: number) => boolean
+  consumeCredits: (amount: number) => boolean
   addCredits: (amount: number) => void
+  refreshCredits: () => Promise<void>
 }
 
 const CreditContext = createContext<CreditContextType | undefined>(undefined)
 
 export function CreditProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, update } = useSession()
   const maxCredits = 100
-  const [credits, setCredits] = useState(maxCredits)
-  const [isClient, setIsClient] = useState(false)
+  const [credits, setCredits] = useState(10) // Initial fallback
 
   useEffect(() => {
-    setIsClient(true)
-    if (typeof window !== 'undefined') {
-      const savedCredits = localStorage.getItem("resumepro_credits")
-      if (savedCredits !== null) {
-        setCredits(Number.parseInt(savedCredits, 10))
-      }
+    if (session?.user?.credits !== undefined) {
+      setCredits(session.user.credits)
     }
-  }, [])
+  }, [session])
 
-  const useCredits = (amount: number) => {
+  const consumeCredits = (amount: number) => {
     if (credits >= amount) {
-      const newBalance = credits - amount
-      setCredits(newBalance)
-      if (typeof window !== 'undefined') {
-        localStorage.setItem("resumepro_credits", newBalance.toString())
-      }
+      setCredits(prev => prev - amount)
+      // Note: Backend also subtracts during specific actions
       return true
     }
     return false
   }
 
   const addCredits = (amount: number) => {
-    const newBalance = Math.min(credits + amount, maxCredits)
-    setCredits(newBalance)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem("resumepro_credits", newBalance.toString())
-    }
+    setCredits(prev => Math.min(prev + amount, maxCredits))
+  }
+
+  const refreshCredits = async () => {
+    // This triggers a session refresh in NextAuth
+    await update()
   }
 
   return (
-    <CreditContext.Provider value={{ credits, maxCredits, useCredits, addCredits }}>{children}</CreditContext.Provider>
+    <CreditContext.Provider value={{ credits, maxCredits, consumeCredits, addCredits, refreshCredits }}>
+      {children}
+    </CreditContext.Provider>
   )
 }
 

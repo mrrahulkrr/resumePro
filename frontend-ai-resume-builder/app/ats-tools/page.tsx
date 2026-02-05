@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input"
 import { uploadFormSchema, type UploadFormValues } from "@/lib/validations/upload"
 import { Upload, AlertCircle, FileCheck2, Sparkles, Zap } from "lucide-react"
 import { useCredits } from "@/lib/credit-context"
+import { api } from "@/lib/api"
+import type { Resume } from "@/types/resume"
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +24,7 @@ export default function ATSToolsPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
-  const { credits, useCredits: consumeCredits } = useCredits()
+  const { credits, consumeCredits } = useCredits()
 
   const {
     register,
@@ -44,11 +46,35 @@ export default function ATSToolsPage() {
 
     setIsLoading(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // 1. Parse the uploaded file
+      const parseResult = await api.uploadFile<{ filename: string; text: string }>(
+        "/api/v1/resumes/parse-file",
+        data.resume
+      )
+
+      // 2. Wrap in basic LaTeX
+      const latexContent = `\\documentclass[11pt,a4paper]{article}
+\\usepackage[margin=0.75in]{geometry}
+\\begin{document}
+${parseResult.text.replace(/([&%$#_{}])/g, "\\$1")}
+\\end{document}`
+
+      // 3. Create Resume
+      const newResume = await api.post<Resume>("/api/v1/resumes", {
+        title: parseResult.filename.replace(/\.(pdf|txt)$/i, ""),
+        content: latexContent,
+        job_description: data.jobDescription,
+      })
+
+      // 4. Analyze Resume
+      await api.post(`/api/v1/resumes/${newResume.id}/analyze`)
+
+      // 5. Consume credits and navigate
       consumeCredits(10)
-      router.push("/results")
-    } catch (error) {
+      router.push(`/results?id=${newResume.id}`)
+    } catch (error: any) {
       console.error("Error:", error)
+      alert(error.message || "Failed to analyze resume. Please check your connection and try again.")
     } finally {
       setIsLoading(false)
     }

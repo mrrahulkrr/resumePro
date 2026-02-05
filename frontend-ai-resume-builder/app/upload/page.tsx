@@ -18,6 +18,7 @@ import { uploadFormSchema, type UploadFormValues } from "@/lib/validations/uploa
 import { Upload, AlertCircle, Loader2, FileText, CheckCircle2 } from "lucide-react"
 import { api } from "@/lib/api"
 import { useToast } from "@/components/ui/use-toast"
+import { useCredits } from "@/lib/credit-context"
 import type { Resume } from "@/types/resume"
 
 export default function UploadPage() {
@@ -66,12 +67,23 @@ export default function UploadPage() {
     }
   }
 
+  const { credits, consumeCredits } = useCredits()
+
   const onSubmit = async (data: UploadFormValues) => {
     if (!parsedText) {
       toast({
         variant: "destructive",
         title: "No Resume Content",
         description: "Please upload a resume file first.",
+      })
+      return
+    }
+
+    if (credits < 10) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient Credits",
+        description: "You need at least 10 credits to process and analyze a new resume.",
       })
       return
     }
@@ -95,6 +107,9 @@ export default function UploadPage() {
         } catch (e) {
           console.log("Analysis skipped - continuing to editor")
         }
+        
+        // Consume credits
+        consumeCredits(10)
         
         // Navigate to editor
         router.push(`/editor?id=${newResume.id}`)

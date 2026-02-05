@@ -113,6 +113,10 @@ async def delete_resume(
             detail="Resume not found"
         )
         
+    await db.delete(resume)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+        
 @router.post("/{resume_id}/analyze", response_model=ResumeResponse)
 async def analyze_resume_endpoint(
     resume_id: int,
@@ -132,12 +136,23 @@ async def analyze_resume_endpoint(
             detail="Resume not found"
         )
     
+    # 1.5 Check Credits
+    if current_user.credits < 10:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Insufficient credits. You need at least 10 credits for an AI analysis."
+        )
+    
     # 2. Call AI Service
     from app.services.ai_service import ai_service
     analysis_result = await ai_service.analyze_resume(
         resume_latex=resume.content,
         job_description=resume.job_description or ""
     )
+    
+    # 2.5 Subtract Credits
+    current_user.credits -= 10
+    db.add(current_user) # Ensure user is marked as modified
     
     # 3. Update Resume
     resume.ats_score = analysis_result.ats_score
