@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Navbar } from "@/components/navbar"
+
+export const dynamic = 'force-dynamic'
 import { Footer } from "@/components/footer"
 import { ScoreCard } from "@/components/score-card"
 import { Button } from "@/components/ui/button"

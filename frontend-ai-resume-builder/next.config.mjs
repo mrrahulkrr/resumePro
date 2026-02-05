@@ -7,6 +7,8 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   serverExternalPackages: ["next-auth"],
+  // Disable static generation for all pages to avoid React context prerender errors
+  output: 'standalone',
 }
 
 export default nextConfig

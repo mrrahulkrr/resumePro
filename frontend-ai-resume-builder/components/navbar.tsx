@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -10,10 +11,34 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { CreditBadge } from "@/components/credit-badge"
 
 export function Navbar() {
+  const [mounted, setMounted] = useState(false)
   const { data: session } = useSession()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const userName = session?.user?.name || session?.user?.email || "User"
   const userInitial = (userName || "U")[0].toUpperCase()
+
+  // Render a placeholder during SSR to avoid context access issues
+  if (!mounted) {
+    return (
+      <nav className="sticky top-0 z-50 bg-background border-b border-border">
+        <div className="container-center flex items-center justify-between py-4">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="bg-primary p-2 rounded-lg">
+              <FileText className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <span className="font-semibold text-lg">ResumePro</span>
+          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+          </div>
+        </div>
+      </nav>
+    )
+  }
 
   return (
     <nav className="sticky top-0 z-50 bg-background border-b border-border">

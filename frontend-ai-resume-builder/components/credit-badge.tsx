@@ -1,13 +1,23 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useCredits } from "@/lib/credit-context"
 import { Progress } from "@/components/ui/progress"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Coins } from "lucide-react"
 
 export function CreditBadge() {
+  const [mounted, setMounted] = useState(false)
   const { credits, maxCredits } = useCredits()
   const percentage = (credits / maxCredits) * 100
+  
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return null
+  }
 
   return (
     <TooltipProvider>
