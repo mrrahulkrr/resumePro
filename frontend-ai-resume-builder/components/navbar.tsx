@@ -98,9 +98,6 @@ export function Navbar() {
               <Button variant="outline" asChild>
                 <Link href="/auth/signin">Sign In</Link>
               </Button>
-              <Button asChild>
-                <Link href="/auth/signup">Sign Up</Link>
-              </Button>
             </>
           )}
           

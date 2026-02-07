@@ -8,48 +8,115 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 
 export const dynamic = 'force-dynamic'
-import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { editorFormSchema, type EditorFormValues } from "@/lib/validations/editor"
-import { Download, Wand2, AlertCircle, Save, Sparkles, CheckCircle2, Eye, Loader2, X } from "lucide-react"
+import { 
+  Download, 
+  AlertCircle, 
+  Save, 
+  CheckCircle2, 
+  Eye, 
+  Loader2, 
+  X, 
+  ZoomIn, 
+  ZoomOut, 
+  Maximize2, 
+  Code2, 
+  FileText,
+  Settings,
+  Palette,
+  Copy
+} from "lucide-react"
 import { api } from "@/lib/api"
-import type { Resume, ResumeAnalysisResult } from "@/types/resume"
+import type { Resume } from "@/types/resume"
 import { useToast } from "@/components/ui/use-toast"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
 const DEFAULT_LATEX = `\\documentclass{article}
 \\usepackage[margin=0.5in]{geometry}
 \\usepackage{hyperref}
+\\usepackage{enumitem}
+\\usepackage{xcolor}
 
 \\begin{document}
 
 \\noindent
-\\textbf{\\Large John Doe}\\\\
-Email: john@example.com | Phone: (555) 123-4567 | LinkedIn: linkedin.com/in/johndoe
+\\textbf{\\Large YOUR NAME}\\\\
+Email: your.email@example.com | Phone: (555) 123-4567 | LinkedIn: linkedin.com/in/yourname
 
 \\section*{Professional Summary}
-Experienced Full-Stack Developer with 5+ years of expertise in React, Node.js, and cloud technologies. 
-Proven track record of delivering scalable applications that improve user engagement by 40%.
+Experienced professional with X+ years of expertise in your field. 
+Proven track record of delivering results and achieving goals.
 
 \\section*{Experience}
 
 \\noindent
-\\textbf{Senior Software Engineer} | Tech Company | 2021 - Present
-\\begin{itemize}
-  \\item Led development of microservices architecture serving 2M+ users
-  \\item Reduced API response time by 60% through optimization
-  \\item Mentored team of 4 junior developers
+\\textbf{Job Title} | Company Name | Start Year - End Year
+\\begin{itemize}[leftmargin=*]
+  \\item Achievement or responsibility with quantifiable results
+  \\item Another key accomplishment demonstrating impact
+  \\item Leadership or technical contribution
+\\end{itemize}
+
+\\noindent
+\\textbf{Previous Job Title} | Previous Company | Start Year - End Year
+\\begin{itemize}[leftmargin=*]
+  \\item Key project or initiative you led
+  \\item Measurable improvement or contribution
+  \\item Cross-functional collaboration example
 \\end{itemize}
 
 \\section*{Skills}
-JavaScript, TypeScript, React, Node.js, Python, AWS, Docker, PostgreSQL
+Technical Skills, Tools, Languages, Frameworks, Certifications
 
 \\section*{Education}
-\\textbf{Bachelor of Science in Computer Science} | University Name | 2019
+\\textbf{Degree} | University Name | Graduation Year
 
 \\end{document}`
+
+type EditorTheme = "light" |"dark" | "monokai" | "github" | "dracula"
+
+const THEMES = {
+  light: {
+    name: "Light",
+    bg: "bg-white",
+    text: "text-gray-900",
+    border: "border-gray-200",
+  },
+  dark: {
+    name: "Dark",
+    bg: "bg-gray-900",
+    text: "text-gray-100",
+    border: "border-gray-700",
+  },
+  monokai: {
+    name: "Monokai",
+    bg: "bg-[#272822]",
+    text: "text-[#F8F8F2]",
+    border: "border-[#3E3D32]",
+  },
+  github: {
+    name: "GitHub",
+    bg: "bg-[#f6f8fa]",
+    text: "text-[#24292f]",
+    border: "border-[#d0d7de]",
+  },
+  dracula: {
+    name: "Dracula",
+    bg: "bg-[#282a36]",
+    text: "text-[#f8f8f2]",
+    border: "border-[#44475a]",
+  },
+}
 
 function EditorContent() {
   const router = useRouter()
@@ -58,12 +125,15 @@ function EditorContent() {
   const { toast } = useToast()
 
   const [isSaving, setIsSaving] = useState(false)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const [isPreviewing, setIsPreviewing] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [showNotification, setShowNotification] = useState(false)
-  const [analysisResult, setAnalysisResult] = useState<ResumeAnalysisResult | null>(null)
+  const [previewZoom, setPreviewZoom] = useState(100)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [editorTheme, setEditorTheme] = useState<EditorTheme>("github")
+  const [fontSize, setFontSize] = useState(14)
+  const [showLineNumbers, setShowLineNumbers] = useState(true)
 
   const {
     register,
@@ -88,11 +158,6 @@ function EditorContent() {
         if (resume) {
           if (resume.content) setValue("resumeCode", resume.content)
           if (resume.title) setValue("title", resume.title)
-          if (resume.job_description) setValue("jobDescription", resume.job_description)
-          
-          if (resume.analysis) {
-              setAnalysisResult(resume.analysis)
-          }
         }
       } catch (error) {
         console.error("Failed to load resume:", error)
@@ -108,7 +173,20 @@ function EditorContent() {
 
   const resumeCode = watch("resumeCode")
   const title = watch("title")
-  const jobDescription = watch("jobDescription")
+
+  // Auto-save functionality
+  useEffect(() => {
+    if (!resumeId || !resumeCode || resumeCode === DEFAULT_LATEX) return
+    
+    const autoSave = setTimeout(() => {
+      api.put(`/api/v1/resumes/${resumeId}`, {
+        title: title || "Untitled Resume",
+        content: resumeCode,
+      }).catch(() => {})
+    }, 5000)
+
+    return () => clearTimeout(autoSave)
+  }, [resumeCode, title, resumeId])
 
   const onSubmit = async (data: EditorFormValues) => {
     setIsSaving(true)
@@ -116,391 +194,388 @@ function EditorContent() {
       const payload = {
         title: data.title || "Untitled Resume",
         content: data.resumeCode,
-        job_description: data.jobDescription,
       }
 
       if (resumeId) {
-        // Update existing
         await api.put<Resume>(`/api/v1/resumes/${resumeId}`, payload)
       } else {
-        // Create new
         const newResume = await api.post<Resume>("/api/v1/resumes", payload)
-        // Redirect to edit mode with new ID
         if (newResume && newResume.id) {
-            router.replace(`/editor?id=${newResume.id}`)
+          router.replace(`/editor?id=${newResume.id}`)
         }
       }
 
       setShowNotification(true)
       setTimeout(() => setShowNotification(false), 3000)
     } catch (error) {
-       console.error("Failed to save:", error)
-        toast({
-          variant: "destructive",
-          title: "Save Failed",
-          description: "Could not save your changes. Please try again.",
-        })
+      console.error("Failed to save:", error)
+      toast({
+        variant: "destructive",
+        title: "Save Failed",
+        description: "Could not save your changes. Please try again.",
+      })
     } finally {
       setIsSaving(false)
     }
   }
 
-  const handleAnalyze = async () => {
-    if (!resumeId) {
-        toast({
-            title: "Save First",
-            description: "Please save your resume before analyzing.",
-        })
-        return
-    }
-
-    setIsAnalyzing(true)
-    try {
-        // First save current changes
-        await onSubmit({ resumeCode })
-        
-        // Then analyze
-        const result = await api.post<Resume>(`/api/v1/resumes/${resumeId}/analyze`)
-        if (result && result.analysis) {
-            setAnalysisResult(result.analysis)
-            toast({
-                title: "Analysis Complete",
-                description: `ATS Score: ${result.analysis.ats_score}/100`,
-            })
-        }
-    } catch (error) {
-        console.error("Analysis failed:", error)
-        toast({
-            variant: "destructive",
-            title: "Analysis Failed",
-            description: "Could not analyze resume. Please try again."
-        })
-    } finally {
-        setIsAnalyzing(false)
-    }
+  const showSaveFirstToast = () => {
+    toast({
+      title: "Save First",
+      description: "Please save your resume before previewing.",
+    })
   }
 
   const handleDownload = async () => {
-    if (!resumeId) {
-        toast({
-            title: "Save First",
-            description: "Please save your resume before downloading.",
-        })
-        return
-    }
+    if (!resumeId) return showSaveFirstToast()
 
     setIsDownloading(true)
     try {
-        await api.download(`/api/v1/resumes/${resumeId}/download`, `resume_${resumeId}.pdf`)
-        toast({
-            title: "Success",
-            description: "Your PDF has been generated and download has started.",
-        })
+      await api.download(`/api/v1/resumes/${resumeId}/download`, `resume_${resumeId}.pdf`)
+      toast({
+        title: "Success",
+        description: "Your PDF has been generated and download has started.",
+      })
     } catch (error) {
-        console.error("Download failed:", error)
-        toast({
-            variant: "destructive",
-            title: "Download Failed",
-            description: "Could not generate PDF. Please ensure your LaTeX is valid."
-        })
+      console.error("Download failed:", error)
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: "Could not generate PDF. Please ensure your LaTeX is valid."
+      })
     } finally {
-        setIsDownloading(false)
+      setIsDownloading(false)
     }
   }
 
   const handlePreview = async () => {
-    if (!resumeId) {
-        toast({
-            title: "Save First",
-            description: "Please save your resume before previewing.",
-        })
-        return
-    }
+    if (!resumeId) return showSaveFirstToast()
 
     setIsPreviewing(true)
     try {
-        // Clean up previous preview URL
-        if (previewUrl) {
-            window.URL.revokeObjectURL(previewUrl)
-        }
-        
-        const url = await api.getPreviewUrl(`/api/v1/resumes/${resumeId}/preview`)
-        setPreviewUrl(url)
+      if (previewUrl) {
+        window.URL.revokeObjectURL(previewUrl)
+      }
+      
+      const url = await api.getPreviewUrl(`/api/v1/resumes/${resumeId}/preview`)
+      setPreviewUrl(url)
     } catch (error) {
-        console.error("Preview failed:", error)
-        toast({
-            variant: "destructive",
-            title: "Preview Failed",
-            description: "Could not generate preview. Please ensure your LaTeX is valid."
-        })
+      console.error("Preview failed:", error)
+      toast({
+        variant: "destructive",
+        title: "Preview Failed",
+        description: "Could not generate preview. Please ensure your LaTeX is valid."
+      })
     } finally {
-        setIsPreviewing(false)
+      setIsPreviewing(false)
     }
   }
 
   const closePreview = () => {
-    if (previewUrl) {
-        window.URL.revokeObjectURL(previewUrl)
-    }
+    if (previewUrl) window.URL.revokeObjectURL(previewUrl)
     setPreviewUrl(null)
   }
 
+  const getLineNumbers = (code: string) => 
+    code.split('\n').map((_, i) => i + 1).join('\n')
+
+  const theme = THEMES[editorTheme]
+  const editorStyle = { fontSize: `${fontSize}px`, lineHeight: "1.6" }
+  const textareaStyle = { ...editorStyle, padding: "1rem" }
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col h-screen overflow-hidden">
       <Navbar />
 
-      <main className="flex-1 bg-background">
-        <div className="border-b border-border sticky top-16 z-40 bg-background">
-          <div className="container-center py-4 flex items-center justify-between">
-            <div className="flex-1 max-w-md mr-4">
-              <input
-                 {...register("title")}
-                 className="text-2xl font-bold bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary/20 rounded px-1 w-full"
-                 placeholder="Resume Title"
-              />
-              <p className="text-sm text-muted-foreground">Powered by LaTeX - Professional formatting guaranteed</p>
-            </div>
-            <div className="hidden md:flex gap-2">
-               <Button 
-                variant="secondary" 
-                onClick={handleAnalyze} 
-                disabled={isAnalyzing || isSaving}
-                className="gap-2 bg-purple-100 text-purple-900 hover:bg-purple-200 border-purple-200"
-              >
-                <Sparkles className="w-4 h-4" />
-                {isAnalyzing ? "Analyzing..." : "Analyze with AI"}
-              </Button>
-              <Button type="submit" onClick={handleSubmit(onSubmit)} disabled={isSaving} className="gap-2">
-                <Save className="w-4 h-4" />
-                {isSaving ? "Saving..." : "Save Changes"}
-              </Button>
-              <Button variant="outline" onClick={handlePreview} disabled={isPreviewing || !resumeId}>
-                <Eye className="w-4 h-4 mr-2" />
-                {isPreviewing ? "Loading..." : "Preview PDF"}
-              </Button>
-              <Button variant="outline" onClick={handleDownload} disabled={isDownloading}>
-                <Download className="w-4 h-4 mr-2" />
-                {isDownloading ? "Downloading..." : "Download PDF"}
-              </Button>
-            </div>
+      {/* Top Toolbar */}
+      <div className="border-b border-border bg-background z-40 flex-shrink-0">
+        <div className="px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3 flex-1">
+            <FileText className="w-5 h-5 text-primary" />
+            <input
+              {...register("title")}
+              className="text-lg font-semibold bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-primary/20 rounded px-2 max-w-md"
+              placeholder="Untitled Resume"
+            />
+            <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+              LaTeX Editor
+            </span>
+            {resumeId && (
+              <span className="text-xs text-muted-foreground">
+                ● Auto-saving
+              </span>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Theme</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {Object.entries(THEMES).map(([key, value]) => (
+                  <DropdownMenuItem
+                    key={key}
+                    onClick={() => setEditorTheme(key as EditorTheme)}
+                    className={cn(editorTheme === key && "bg-accent")}
+                  >
+                    <Palette className="w-4 h-4 mr-2" />
+                    {value.name} {editorTheme === key && "✓"}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Font Size: {fontSize}px</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setFontSize(prev => Math.max(10, prev - 2))}>
+                  Decrease (A-)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFontSize(prev => Math.min(24, prev + 2))}>
+                  Increase (A+)
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setShowLineNumbers(!showLineNumbers)}>
+                  {showLineNumbers ? "✓ " : ""}Line Numbers
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handlePreview} 
+              disabled={isPreviewing || !resumeId}
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              {isPreviewing ? "Loading..." : "Preview"}
+            </Button>
+            
+            <Button 
+              type="submit" 
+              onClick={handleSubmit(onSubmit)} 
+              disabled={isSaving}
+              size="sm"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={handleDownload} 
+              disabled={isDownloading || !resumeId}
+              size="sm"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {isDownloading ? "..." : "Download"}
+            </Button>
           </div>
         </div>
 
         {showNotification && (
-          <div className="bg-green-50 border-b border-green-200">
-            <div className="container-center py-3 flex items-center gap-2 text-green-800 text-sm">
+          <div className="bg-green-50 border-b border-green-200 px-4 py-2">
+            <div className="flex items-center gap-2 text-green-800 text-sm">
               <CheckCircle2 className="w-4 h-4" />
               <span>Changes saved successfully</span>
             </div>
           </div>
         )}
+      </div>
 
-        <div className="py-6">
-          <div className="container-center">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                
-              {/* Main Editor Area */}
-              <div className="lg:col-span-8 flex flex-col gap-6">
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <div className="grid grid-cols-1 gap-6">
-                        <div className="flex flex-col">
-                        <label className="text-sm font-semibold mb-2 flex items-center gap-2">
-                             <span>Target Job Description</span>
-                             <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">AI Target</span>
-                         </label>
-                         <Textarea
-                             {...register("jobDescription")}
-                             className="mb-4 text-xs h-32 border-2"
-                             placeholder="Paste the job description here for AI analysis..."
-                         />
-                         
-                        <label className="text-sm font-semibold mb-2 flex items-center gap-2">
-                            <span>LaTeX Code</span>
-                            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">Editable</span>
-                        </label>
-                        <Textarea
-                            {...register("resumeCode")}
-                            className="flex-1 font-mono text-xs leading-relaxed border-2"
-                            placeholder="Enter LaTeX resume code..."
-                            style={{ minHeight: "600px" }}
-                        />
-                        {errors.resumeCode && (
-                            <div className="mt-2 flex items-center gap-2 text-destructive text-sm">
-                            <AlertCircle className="w-4 h-4" />
-                            {errors.resumeCode.message}
-                            </div>
-                        )}
-                        </div>
-                    </div>
-                </form>
+      <main className="flex-1 bg-background overflow-hidden flex">
+          {/* Editor Panel */}
+          <div className={cn(
+            "flex-1 border-r border-border flex flex-col",
+            isFullscreen && "hidden"
+          )}>
+            <div className="px-4 py-2 bg-muted border-b border-border flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Code2 className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium">LaTeX Source</span>
               </div>
-
-              {/* Sidebar / Analysis / Preview Area */}
-              <div className="lg:col-span-4 flex flex-col gap-6">
-                 
-                 {/* Analysis Result Card */}
-                 {analysisResult && (
-                    <Card className="border-purple-200 bg-purple-50/50">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-lg flex items-center gap-2 text-purple-900">
-                                <Sparkles className="w-5 h-5" />
-                                AI Analysis
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                <div>
-                                    <div className="flex justify-between text-sm mb-1">
-                                        <span className="font-medium">ATS Score</span>
-                                        <span className="font-bold">{analysisResult.ats_score}/100</span>
-                                    </div>
-                                    <Progress value={analysisResult.ats_score} className="h-2" />
-                                </div>
-                                
-                                {analysisResult.missing_keywords.length > 0 && (
-                                    <div>
-                                        <h4 className="text-sm font-semibold mb-1 text-red-700">Missing Keywords</h4>
-                                        <div className="flex flex-wrap gap-1">
-                                            {analysisResult.missing_keywords.map((kw, i) => (
-                                                <span key={i} className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full border border-red-200">
-                                                    {kw}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {analysisResult.feedback.length > 0 && (
-                                     <div>
-                                        <h4 className="text-sm font-semibold mb-1 text-purple-900">Feedback</h4>
-                                        <ul className="text-xs space-y-1 list-disc list-inside text-muted-foreground">
-                                            {analysisResult.feedback.map((fb, i) => (
-                                                <li key={i}>{fb}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-
-                                {analysisResult.tailored_content && (
-                                    <div className="pt-2">
-                                        <Button 
-                                            variant="outline" 
-                                            size="sm"
-                                            className="w-full text-xs gap-2 border-purple-200 text-purple-700 hover:bg-purple-100"
-                                            onClick={() => {
-                                                setValue("resumeCode", analysisResult.tailored_content!);
-                                                toast({
-                                                    title: "Applied",
-                                                    description: "AI-tailored version has been applied to the editor.",
-                                                });
-                                            }}
-                                        >
-                                            <Wand2 className="w-3 h-3" />
-                                            Apply AI Optimizations
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                 )}
-
-                <div className="flex flex-col">
-                  <label className="text-sm font-semibold mb-2 flex items-center gap-2">
-                    <span>Preview</span>
-                    {previewUrl && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-6 px-2 text-xs"
-                        onClick={closePreview}
-                      >
-                        <X className="w-3 h-3 mr-1" />
-                        Close
-                      </Button>
-                    )}
-                  </label>
-                  <div className="flex-1 bg-white border-2 border-border rounded-lg overflow-hidden shadow-sm" style={{ height: "600px" }}>
-                    {previewUrl ? (
-                      <iframe 
-                        src={previewUrl}
-                        className="w-full h-full"
-                        title="Resume Preview"
-                      />
-                    ) : (
-                      <div className="h-full flex flex-col items-center justify-center text-center p-6">
-                        {isPreviewing ? (
-                          <>
-                            <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
-                            <p className="text-sm text-muted-foreground">Compiling LaTeX...</p>
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="w-12 h-12 text-muted-foreground/30 mb-3" />
-                            <p className="text-muted-foreground text-sm mb-4">
-                              Click &quot;Preview PDF&quot; to see your resume
-                            </p>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={handlePreview}
-                              disabled={!resumeId}
-                            >
-                              <Eye className="w-4 h-4 mr-2" />
-                              Generate Preview
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    )}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => {
+                    navigator.clipboard.writeText(resumeCode || "")
+                    toast({ title: "Copied!" })
+                  }}
+                  title="Copy to clipboard"
+                >
+                  <Copy className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className={cn("flex-1 overflow-auto", theme.bg)}>
+              <div className="flex h-full">
+                {showLineNumbers && (
+                  <div className={cn(
+                    "px-4 py-4 select-none border-r",
+                    theme.border,
+                    "bg-opacity-50"
+                  )}>
+                    <pre 
+                      className={cn("font-mono text-right opacity-50", theme.text)}
+                      style={editorStyle}
+                    >
+                      {getLineNumbers(resumeCode || DEFAULT_LATEX)}
+                    </pre>
                   </div>
+                )}
+                
+                <div className="flex-1">
+                  <Textarea
+                    {...register("resumeCode")}
+                    className={cn(
+                      "w-full h-full border-0 resize-none font-mono focus-visible:ring-0 focus-visible:ring-offset-0",
+                      theme.bg,
+                      theme.text
+                    )}
+                    style={textareaStyle}
+                    placeholder="Enter LaTeX code..."
+                    spellCheck={false}
+                  />
                 </div>
               </div>
             </div>
 
-            {/* Mobile Actions */}
-            <div className="flex md:hidden flex-col gap-3 mt-6">
-                <Button 
-                    variant="secondary" 
-                    onClick={handleAnalyze} 
-                    disabled={isAnalyzing || isSaving}
-                    className="gap-2 bg-purple-100 text-purple-900 border-purple-200"
-                >
-                <Sparkles className="w-4 h-4" />
-                {isAnalyzing ? "Analyzing..." : "Analyze with AI"}
-              </Button>
-                <Button type="submit" onClick={handleSubmit(onSubmit)} disabled={isSaving} className="gap-2">
-                <Save className="w-4 h-4" />
-                    {isSaving ? "Saving..." : "Save Changes"}
-                </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isDownloading}
-                onClick={handleDownload}
-                className="gap-2"
-              >
-                <Download className="w-4 h-4" />
-                {isDownloading ? "Downloading..." : "Download PDF"}
-              </Button>
-              <Button type="button" variant="outline" asChild className="bg-transparent">
-                <Link href="/results">Back to Results</Link>
-              </Button>
+            {errors.resumeCode && (
+              <div className="px-4 py-2 bg-destructive/10 border-t border-destructive flex items-center gap-2 text-destructive text-sm flex-shrink-0">
+                <AlertCircle className="w-4 h-4" />
+                {errors.resumeCode.message}
+              </div>
+            )}
+          </div>
+
+          {/* Preview Panel */}
+          <div className={cn(
+            "w-1/2 flex flex-col bg-gray-100",
+            isFullscreen && "w-full"
+          )}>
+            <div className="px-4 py-2 bg-background border-b border-border flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium">PDF Preview</span>
+                {previewUrl && (
+                  <span className="text-xs text-muted-foreground">
+                    {previewZoom}%
+                  </span>
+                )}
+              </div>
+              
+              {previewUrl && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => setPreviewZoom(Math.max(50, previewZoom - 10))}
+                  >
+                    <ZoomOut className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => setPreviewZoom(Math.min(200, previewZoom + 10))}
+                  >
+                    <ZoomIn className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                    title={isFullscreen ? "Exit fullscreen" : "Fullscreen preview"}
+                  >
+                    <Maximize2 className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={closePreview}
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              )}
             </div>
 
-            <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <h3 className="font-semibold mb-2">Tips for using the editor</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• Edit the LaTeX code directly to customize your resume formatting</li>
-                <li>• Use the "Analyze with AI" button to get instant feedback and ATS scoring</li>
-                <li>• Download your resume as a PDF for submission</li>
-              </ul>
+            <div className="flex-1 overflow-auto bg-gray-200 p-4">
+              {previewUrl ? (
+                <div 
+                  className="mx-auto bg-white shadow-2xl"
+                  style={{ 
+                    width: `${previewZoom}%`,
+                    minHeight: "100%"
+                  }}
+                >
+                  <iframe 
+                    src={previewUrl}
+                    className="w-full h-full"
+                    style={{ minHeight: "1000px" }}
+                    title="Resume Preview"
+                  />
+                </div>
+              ) : (
+                <div className="h-full flex flex-col items-center justify-center text-center p-6 bg-white rounded-lg shadow-sm">
+                  {isPreviewing ? (
+                    <>
+                      <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
+                      <p className="text-lg font-medium mb-2">Compiling LaTeX...</p>
+                      <p className="text-sm text-muted-foreground">This may take a few seconds</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+                        <Eye className="w-12 h-12 text-primary" />
+                      </div>
+                      <h3 className="text-xl font-bold mb-2">Preview your resume</h3>
+                      <p className="text-muted-foreground mb-6 max-w-sm">
+                        Click the Preview button to compile your LaTeX code and see the formatted PDF
+                      </p>
+                      <Button 
+                        onClick={handlePreview}
+                        disabled={!resumeId}
+                        size="lg"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Generate Preview
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
-        </div>
       </main>
 
-      <Footer />
+      {/* Bottom Action Bar */}
+      <div className="border-t border-border bg-background px-4 py-2 flex-shrink-0">
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-4 text-muted-foreground">
+            <span>Professional LaTeX Editor</span>
+            <span>•</span>
+            <Link href="/ats-tools" className="text-primary hover:underline flex items-center gap-1">
+              Run ATS Analysis →
+            </Link>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/dashboard">
+                Dashboard
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

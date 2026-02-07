@@ -194,6 +194,11 @@ export default function SignUpPage() {
                 Sign in
               </Link>
             </p>
+            <p>
+              <Link href="/" className="text-primary hover:underline text-xs">
+                Back to Home
+              </Link>
+            </p>
           </CardContent>
         </Card>
       </div>

@@ -35,13 +35,13 @@ export default function Home() {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
                 <Button size="lg" className="h-14 px-8 text-lg rounded-full group" asChild>
-                  <Link href="/templates">
+                  <Link href="/dashboard">
                     Get Started Now
                     <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>
                 <Button size="lg" variant="ghost" className="h-14 px-8 text-lg rounded-full" asChild>
-                  <Link href="#features">Watch Demo</Link>
+                  <Link href="#features">Explore Features</Link>
                 </Button>
               </div>
 
