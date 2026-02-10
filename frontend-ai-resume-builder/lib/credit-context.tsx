@@ -7,6 +7,7 @@ interface CreditContextType {
   credits: number
   maxCredits: number
   consumeCredits: (amount: number) => boolean
+  consumeAICredits: () => Promise<boolean>
   addCredits: (amount: number) => void
   refreshCredits: () => Promise<void>
 }
@@ -27,7 +28,16 @@ export function CreditProvider({ children }: { children: React.ReactNode }) {
   const consumeCredits = (amount: number) => {
     if (credits >= amount) {
       setCredits(prev => prev - amount)
-      // Note: Backend also subtracts during specific actions
+      return true
+    }
+    return false
+  }
+
+  const consumeAICredits = async () => {
+    const cost = 10 // AI analysis costs 10 credits
+    if (credits >= cost) {
+      setCredits(prev => prev - cost)
+      // Credits are also deducted on backend, but we refresh session to sync
       return true
     }
     return false
@@ -38,12 +48,18 @@ export function CreditProvider({ children }: { children: React.ReactNode }) {
   }
 
   const refreshCredits = async () => {
-    // This triggers a session refresh in NextAuth
     await update()
   }
 
   return (
-    <CreditContext.Provider value={{ credits, maxCredits, consumeCredits, addCredits, refreshCredits }}>
+    <CreditContext.Provider value={{ 
+      credits, 
+      maxCredits, 
+      consumeCredits, 
+      consumeAICredits,
+      addCredits, 
+      refreshCredits 
+    }}>
       {children}
     </CreditContext.Provider>
   )

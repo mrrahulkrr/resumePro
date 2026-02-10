@@ -21,22 +21,44 @@ class AIService:
             )
 
         prompt = f"""
-        Act as an expert ATS (Applicant Tracking System) and Resume Coach.
-        Analyze the following LaTeX resume against the provided Job Description (if any).
+        Act as an elite Technical Recruiter and ATS Optimization Expert.
+        Analyze the following LaTeX resume against the provided Job Description (JD).
         
         Resume Content (LaTeX):
         {resume_latex}
         
         Job Description:
-        {job_description if job_description else "No specific job description provided. Analyze for general software engineering best practices."}
+        {job_description if job_description else "No JD provided. Analyze for high-growth Software Engineering roles (Tier 1 tech companies)."}
         
-        Provide the output STRICTLY as a JSON object with the following keys:
-        - ats_score: number (0-100)
-        - feedback: list of strings (concrete, actionable improvements)
-        - missing_keywords: list of strings (important keywords from JD missing in resume)
-        - tailored_content: string (Optional: Return the full optimized LaTeX code if simple fixes are possible, otherwise null)
+        CRITERIA FOR ANALYSIS:
+        1. ATS SCORE (0-100):
+           - 90-100: Perfect keyword match, strong metrics, clean LaTeX structure.
+           - 70-89: Good match, but could use more quantifiable achievements.
+           - 40-69: Missing key technologies or weak bullet points.
+           - 0-39: Poor formatting or significant gaps in skills/experience.
+
+        2. FEEDBACK (Actionable & Concrete):
+           - Evaluate bullet points using the Google XYZ Formula: 'Accomplished [X] as measured by [Y], by doing [Z]'.
+           - Identify filler words and recommend strong action verbs.
+           - Check for proper LaTeX formatting (avoiding common compilation errors).
+
+        3. KEYWORDS:
+           - Extract missing hard skills, frameworks, and tools from the JD that are absent in the resume.
+
+        4. TAILORED CONTENT (LaTeX):
+           - Provide a suggested improvement for ONE specific high-impact section (like Professional Summary or a key Experience bullet).
+           - ENSURE the output is valid LaTeX that can be compiled.
+
+        OUTPUT REQUIREMENTS:
+        Return ONLY a raw JSON object. NO markdown, NO ```json blocks, NO preamble.
         
-        Do not include markdown formatting (like ```json) in the response, just the raw JSON string.
+        JSON Structure:
+        {{
+          "ats_score": number,
+          "feedback": ["point 1", "point 2", ...],
+          "missing_keywords": ["keyword 1", ...],
+          "tailored_content": "Suggested LaTeX snippet or full section"
+        }}
         """
 
         try:

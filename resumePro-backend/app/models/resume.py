@@ -16,6 +16,7 @@ class Resume(Base):
     ats_score = Column(Integer, nullable=True)
     is_tailored = Column(Boolean, default=False)
     job_description = Column(Text, nullable=True)
+    pdf_blob_name = Column(String(500), nullable=True) # GCP Storage path
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())

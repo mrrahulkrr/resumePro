@@ -1,4 +1,4 @@
-import NextAuth from "next-auth"
+import NextAuth, { getServerSession } from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import type { Session } from "next-auth"
 import type { JWT } from "next-auth/jwt"
@@ -127,5 +127,5 @@ export const authConfig = {
   debug: process.env.NODE_ENV === "development",
 }
 const handler = NextAuth(authConfig)
-
+export const auth = () => getServerSession(authConfig)
 export { handler }

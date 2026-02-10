@@ -33,6 +33,7 @@ class ResumeResponse(ResumeBase):
     user_id: int
     ats_score: Optional[int] = None
     is_tailored: bool
+    pdf_blob_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     

@@ -40,6 +40,16 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { AIAnalysisCard } from "@/components/ai-analysis-card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Sparkles as SparklesIcon } from "lucide-react"
 
 const DEFAULT_LATEX = `\\documentclass{article}
 \\usepackage[margin=0.5in]{geometry}
@@ -134,6 +144,7 @@ function EditorContent() {
   const [editorTheme, setEditorTheme] = useState<EditorTheme>("github")
   const [fontSize, setFontSize] = useState(14)
   const [showLineNumbers, setShowLineNumbers] = useState(true)
+  const [showAIDialog, setShowAIDialog] = useState(false)
 
   const {
     register,
@@ -342,6 +353,28 @@ function EditorContent() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Dialog open={showAIDialog} onOpenChange={setShowAIDialog}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 hover:text-purple-800"
+                >
+                  <SparklesIcon className="w-4 h-4 mr-2" />
+                  AI Analysis
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px] p-0 border-none bg-transparent">
+                <AIAnalysisCard 
+                  resumeId={resumeId ? parseInt(resumeId) : undefined} 
+                  resumeContent={resumeCode}
+                  onAnalysisComplete={(score) => {
+                    // Update any local state if needed
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
 
             <Button 
               variant="outline" 

@@ -842,6 +842,111 @@ GPA: 3.7/4.0 | Dean's List (6 semesters)\\
 \end{itemize}
 
 \end{document}"""
+    },
+
+    "software-engineer-plus": {
+        "id": "software-engineer-plus",
+        "name": "Software Engineer Plus",
+        "category": "Tech",
+        "description": "High-impact design with modern typography for senior roles",
+        "color": "bg-cyan-600",
+        "content": r"""\documentclass[11pt,a4paper]{article}
+\usepackage[margin=0.6in]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{xcolor}
+
+\definecolor{techblue}{RGB}{3,105,161}
+\definecolor{dark}{RGB}{15,23,42}
+
+\titleformat{\section}{\large\bfseries\color{techblue}}{}{0em}{}[\color{techblue}\titlerule]
+\titlespacing{\section}{0pt}{10pt}{6pt}
+
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{center}
+    {\Huge\bfseries\color{dark} YOUR NAME}\\[4pt]
+    {\large\color{techblue}Senior Full-Stack Engineer}\\[6pt]
+    \texttt{your.email@example.com} $\bullet$ (555) 123-4567 $\bullet$ 
+    \href{https://github.com/you}{github.com/you} $\bullet$ 
+    \href{https://yoursite.com}{yoursite.com}
+\end{center}
+
+\section{Summary}
+Senior Software Engineer with 8+ years of experience specializing in high-performance distributed systems. 
+Expert in architecting scalable backends with Node.js/Go and crafting intuitive frontends with React. 
+
+\section{Technical Expertise}
+\begin{itemize}[leftmargin=*,nosep]
+    \item \textbf{Languages:} TypeScript, JavaScript, Go, Python, SQL, C++
+    \item \textbf{Frameworks:} React, Next.js, Node.js, Express, FastAPI, Gin
+    \item \textbf{Infrastructure:} AWS (EC2, S3, RDS, Lambda), Docker, Kubernetes, Terraform
+\end{itemize}
+
+\section{Experience}
+
+\noindent\textbf{Senior Software Engineer} | \textit{Global Tech Inc.} \hfill 2021 -- Present
+\begin{itemize}[leftmargin=*,nosep,topsep=2pt]
+    \item Re-architected core messaging system to handle 5B+ monthly events using Go and Kafka
+    \item Reduced infra costs by \$2.4M/year through strategic right-sizing
+\end{itemize}
+
+\section{Education}
+\textbf{Master of Science in Computer Science} $|$ \textit{Technical University} \hfill 2018
+
+\end{document}"""
+    },
+
+    "data-science-elite": {
+        "id": "data-science-elite",
+        "name": "Data Science Elite",
+        "category": "Data",
+        "description": "Clean, data-focused layout with emphasis on projects and metrics",
+        "color": "bg-emerald-600",
+        "content": r"""\documentclass[11pt,a4paper]{article}
+\usepackage[margin=0.7in]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{xcolor}
+
+\definecolor{emerald}{RGB}{5,150,105}
+
+\titleformat{\section}{\large\bfseries\color{emerald}}{}{0em}{}[\vspace{2pt}\hrule]
+
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{center}
+    {\Huge\bfseries YOUR NAME}\\[4pt]
+    Data Scientist | Machine Learning Engineer\\[6pt]
+    \href{mailto:email@example.com}{email@example.com} $\bullet$ 
+    \href{https://scholar.google.com}{Google Scholar} $\bullet$ 
+    \href{https://github.com/you}{GitHub}
+\end{center}
+
+\section{Technical Skills}
+\begin{itemize}[leftmargin=*,nosep]
+    \item \textbf{Core:} Python (Pandas, NumPy, Scikit-learn), R, SQL, Spark
+    \item \textbf{Deep Learning:} PyTorch, TensorFlow, Keras, HuggingFace
+\end{itemize}
+
+\section{Professional Experience}
+
+\noindent\textbf{Lead Data Scientist} $|$ \textit{DataCo AI} \hfill 2021 -- Present
+\begin{itemize}[leftmargin=*,nosep]
+    \item Developed predictive maintenance model reducing downtime by 25\%
+    \item Optimized recommendation engine using deep reinforcement learning
+\end{itemize}
+
+\section{Education}
+\textbf{BS in Mathematics \& CS} $|$ \textit{Top University} \hfill 2020
+
+\end{document}"""
     }
 }
 
