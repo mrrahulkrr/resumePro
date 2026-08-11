@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_db
-from app.models.user import User
+from app.models.users import User
 from app.models.resume import Resume
 from app.schemas.resume import ResumeAnalysisResult
 from app.services.ai_service import ai_service

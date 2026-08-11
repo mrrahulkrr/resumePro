@@ -31,7 +31,7 @@ function ResultsContent() {
       }
 
       try {
-        const data = await api.get<Resume>(`/api/v1/resumes/${resumeId}/analyze`)
+        const data = await api.post<Resume>(`/api/v1/resumes/${resumeId}/analyze`)
         setResume(data)
       } catch (err: any) {
         console.error("Failed to fetch analysis:", err)
