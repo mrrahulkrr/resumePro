@@ -11,7 +11,7 @@ import { CheckCircle, AlertCircle, TrendingUp, Loader2, Sparkles, XCircle } from
 import { api } from "@/lib/api"
 import type { Resume } from "@/types/resume"
 
-export const dynamic = 'force-dynamic'
+
 
 function ResultsContent() {
   const router = useRouter()

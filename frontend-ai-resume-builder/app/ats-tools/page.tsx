@@ -21,7 +21,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { formatDistanceToNow } from "date-fns"
 
-export const dynamic = 'force-dynamic'
+
 
 export default function ATSToolsPage() {
   const router = useRouter()
