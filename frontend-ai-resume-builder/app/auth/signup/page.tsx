@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -187,6 +188,34 @@ export default function SignUpPage() {
                 {isLoading ? "Creating account..." : "Create Account"}
               </Button>
             </form>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                variant="outline" 
+                onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+                disabled={isLoading}
+              >
+                GitHub
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                disabled={isLoading}
+              >
+                Google
+              </Button>
+            </div>
 
             <p className="text-center text-sm text-muted-foreground">
               Already have an account?{" "}

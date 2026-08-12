@@ -110,9 +110,26 @@ function SignInForm() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
-                  Or
+                  Or continue with
                 </span>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Button 
+                variant="outline" 
+                onClick={() => signIn("github", { callbackUrl })}
+                disabled={isLoading}
+              >
+                GitHub
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => signIn("google", { callbackUrl })}
+                disabled={isLoading}
+              >
+                Google
+              </Button>
             </div>
 
             <p className="text-center text-sm text-muted-foreground">

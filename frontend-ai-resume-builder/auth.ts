@@ -1,5 +1,7 @@
 import NextAuth, { getServerSession } from "next-auth"
 import Credentials from "next-auth/providers/credentials"
+import GoogleProvider from "next-auth/providers/google"
+import GithubProvider from "next-auth/providers/github"
 import type { Session } from "next-auth"
 import type { JWT } from "next-auth/jwt"
 import { z } from "zod"
@@ -40,6 +42,14 @@ const loginSchema = z.object({
 
 export const authConfig = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    }),
+    GithubProvider({
+      clientId: process.env.GITHUB_ID || "",
+      clientSecret: process.env.GITHUB_SECRET || "",
+    }),
     Credentials({
       name: "Credentials",
       credentials: {
@@ -97,8 +107,40 @@ export const authConfig = {
     error: "/auth/error",
   },
   callbacks: {
-    async jwt({ token, user }: { token: JWT; user?: any }) {
-      if (user) {
+    async jwt({ token, user, account }: { token: JWT; user?: any; account?: any }) {
+      if (account && user && (account.provider === "google" || account.provider === "github")) {
+        // Handle OAuth sync to backend
+        try {
+          const response = await fetch(`${BACKEND_URL}/api/v1/auth/oauth-login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: user.email,
+              name: user.name,
+              provider: account.provider,
+              provider_id: account.providerAccountId,
+              image_url: user.image,
+            }),
+          })
+          if (response.ok) {
+            const data = await response.json()
+            token.accessToken = data.access_token
+            token.refreshToken = data.refresh_token
+            
+            // Fetch user to get credits
+            const userResponse = await fetch(`${BACKEND_URL}/api/v1/auth/me`, {
+              headers: { Authorization: `Bearer ${data.access_token}` },
+            })
+            if (userResponse.ok) {
+               const userData = await userResponse.json()
+               token.credits = userData.credits
+               token.sub = userData.id.toString()
+            }
+          }
+        } catch (error) {
+          console.error("OAuth backend sync error:", error)
+        }
+      } else if (user) {
         token.accessToken = user.accessToken
         token.refreshToken = user.refreshToken
         token.credits = user.credits

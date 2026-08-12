@@ -51,3 +51,12 @@ class TokenData(BaseModel):
     user_id: int
     email: str
     sub: int  # subject (user_id)
+
+
+class OAuthLogin(BaseModel):
+    """Schema for OAuth login"""
+    email: EmailStr
+    provider: str
+    provider_id: str
+    name: Optional[str] = None
+    image_url: Optional[str] = None
