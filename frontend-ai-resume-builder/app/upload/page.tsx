@@ -254,7 +254,7 @@ ${escaped}
                 {errors.resume && (
                   <div className="mt-2 flex items-center gap-2 text-destructive text-sm">
                     <AlertCircle className="w-4 h-4" />
-                    {errors.resume.message}
+                    {String(errors.resume.message)}
                   </div>
                 )}
               </div>
