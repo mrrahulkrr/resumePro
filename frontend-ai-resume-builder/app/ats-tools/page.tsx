@@ -346,7 +346,7 @@ ${parseResult.text.replace(/([&%$#_{}])/g, "\\$1")}
                     {errors.resume && (
                       <div className="mt-3 flex items-center gap-2 text-destructive text-sm">
                         <AlertCircle className="w-4 h-4" />
-                        {errors.resume.message}
+                        {errors.resume.message as string}
                       </div>
                     )}
                   </div>

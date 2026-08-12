@@ -16,7 +16,7 @@ TEMPLATES = {
 \usepackage{xcolor}
 
 % Colors
-\definecolor{primary}{RGB}{0,102,204}
+\definecolor{primary}{HTML}{0066CC}
 \definecolor{darkgray}{RGB}{64,64,64}
 
 % Section formatting
@@ -26,6 +26,7 @@ TEMPLATES = {
 % Remove page numbers
 \pagestyle{empty}
 
+% FONT_PLACEHOLDER
 \begin{document}
 
 % Header
@@ -92,20 +93,21 @@ Expertise in React, Node.js, and cloud technologies. Passionate about clean code
 \usepackage{xcolor}
 
 % Colors
-\definecolor{darkblue}{RGB}{0,51,102}
+\definecolor{primary}{HTML}{003366}
 \definecolor{gold}{RGB}{184,134,11}
 
 % Section formatting
-\titleformat{\section}{\Large\bfseries\color{darkblue}\uppercase}{}{0em}{}
+\titleformat{\section}{\Large\bfseries\color{primary}\uppercase}{}{0em}{}
 \titlespacing{\section}{0pt}{14pt}{8pt}
 
 \pagestyle{empty}
 
+% FONT_PLACEHOLDER
 \begin{document}
 
 % Header
 \begin{center}
-    {\Huge\bfseries\color{darkblue} YOUR NAME}\\[6pt]
+    {\Huge\bfseries\color{primary} YOUR NAME}\\[6pt]
     {\large Chief Technology Officer}\\[8pt]
     \textcolor{gold}{\rule{0.5\textwidth}{1pt}}\\[6pt]
     your.email@example.com $|$ (555) 123-4567 $|$ San Francisco, CA\\
@@ -167,23 +169,24 @@ strategic technology initiatives, and scaling platforms to support 100M+ users g
 \usepackage{graphicx}
 
 % Creative Colors
-\definecolor{accent}{RGB}{147,51,234}
+\definecolor{primary}{HTML}{9333EA}
 \definecolor{secondary}{RGB}{236,72,153}
 \definecolor{dark}{RGB}{30,30,30}
 
 % Section formatting
-\titleformat{\section}{\large\bfseries\color{accent}}{}{0em}{\hspace{-6pt}}
+\titleformat{\section}{\large\bfseries\color{primary}}{}{0em}{\hspace{-6pt}}
 \titlespacing{\section}{0pt}{10pt}{6pt}
 
 \pagestyle{empty}
 
+% FONT_PLACEHOLDER
 \begin{document}
 
 % Creative Header
 \noindent
 \begin{minipage}[t]{0.6\textwidth}
     {\Huge\bfseries\color{dark} YOUR NAME}\\[4pt]
-    {\Large\color{accent} Creative Director \& UX Designer}\\[8pt]
+    {\Large\color{primary} Creative Director \& UX Designer}\\[8pt]
     \textcolor{secondary}{Crafting digital experiences that inspire}
 \end{minipage}
 \hfill
@@ -198,7 +201,7 @@ strategic technology initiatives, and scaling platforms to support 100M+ users g
 \end{minipage}
 
 \vspace{12pt}
-\noindent\textcolor{accent}{\rule{\textwidth}{2pt}}
+\noindent\textcolor{primary}{\rule{\textwidth}{2pt}}
 
 \section{About Me}
 Award-winning creative director with 8+ years transforming brands through innovative design. 
@@ -207,17 +210,17 @@ drive engagement and business growth. Featured in Awwwards, CSS Design Awards, a
 
 \section{Selected Projects}
 
-\noindent\textbf{\color{accent}Brand Redesign -- Fortune 100 Tech Company}\\
+\noindent\textbf{\color{primary}Brand Redesign -- Fortune 100 Tech Company}\\
 Led complete brand identity overhaul reaching 50M+ users globally.\\
 \textit{Impact: 40\% increase in brand recognition, 25\% improvement in user engagement}
 
 \vspace{8pt}
-\noindent\textbf{\color{accent}Mobile App Design -- FinTech Startup}\\
+\noindent\textbf{\color{primary}Mobile App Design -- FinTech Startup}\\
 Designed intuitive banking app from concept to launch in 6 months.\\
 \textit{Impact: 4.8 star rating, 2M downloads in first year, acquired for \$200M}
 
 \vspace{8pt}
-\noindent\textbf{\color{accent}E-commerce Platform -- Fashion Retailer}\\
+\noindent\textbf{\color{primary}E-commerce Platform -- Fashion Retailer}\\
 Created immersive shopping experience with AR try-on features.\\
 \textit{Impact: 60\% increase in conversion rate, \$15M additional revenue}
 
@@ -253,6 +256,7 @@ Awwwards Site of the Day (3x) $\bullet$ Red Dot Design Award $\bullet$ Webby Hon
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
 
+% FONT_PLACEHOLDER
 \begin{document}
 
 \begin{center}
@@ -321,21 +325,22 @@ JavaScript, TypeScript, Python, React, Node.js, PostgreSQL, Git, AWS, Docker
 \usepackage{xcolor}
 
 % Startup-friendly colors
-\definecolor{startup}{RGB}{16,185,129}
+\definecolor{primary}{HTML}{10B981}
 \definecolor{dark}{RGB}{17,24,39}
 
 % Modern section style
-\titleformat{\section}{\large\bfseries\color{startup}}{}{0em}{}
+\titleformat{\section}{\large\bfseries\color{primary}}{}{0em}{}
 \titlespacing{\section}{0pt}{12pt}{6pt}
 
 \pagestyle{empty}
 
+% FONT_PLACEHOLDER
 \begin{document}
 
 % Header with emoji-style icons (using symbols)
 \begin{center}
     {\LARGE\bfseries YOUR NAME}\\[4pt]
-    {\color{startup}Full-Stack Engineer | Startup Enthusiast | Builder}\\[8pt]
+    {\color{primary}Full-Stack Engineer | Startup Enthusiast | Builder}\\[8pt]
     \texttt{your.email@example.com} $\bullet$ 
     \href{https://github.com/you}{github.com/you} $\bullet$
     \href{https://yoursite.dev}{yoursite.dev}
@@ -349,7 +354,7 @@ where I can wear multiple hats and make a real impact.
 \section{What I've Built}
 
 \noindent\textbf{Co-Founder \& CTO} -- StartupName (YC W22) \hfill 2022 -- 2024\\
-\textcolor{startup}{Developer productivity tool -- 10k+ users, \$2M seed raised}
+\textcolor{primary}{Developer productivity tool -- 10k+ users, \$2M seed raised}
 \begin{itemize}[leftmargin=*,nosep]
     \item Built entire MVP in 3 weeks, iterated based on user feedback
     \item Scaled from 0 to 10k users with \$0 marketing budget (all organic/Product Hunt)
@@ -359,7 +364,7 @@ where I can wear multiple hats and make a real impact.
 
 \vspace{8pt}
 \noindent\textbf{Founding Engineer} -- Another Startup \hfill 2020 -- 2022\\
-\textcolor{startup}{B2B SaaS platform -- Acquired by BigCo for \$50M}
+\textcolor{primary}{B2B SaaS platform -- Acquired by BigCo for \$50M}
 \begin{itemize}[leftmargin=*,nosep]
     \item Employee \#3, built core platform features from scratch
     \item Owned entire frontend and half the backend infrastructure
@@ -401,6 +406,7 @@ where I can wear multiple hats and make a real impact.
 
 \pagestyle{empty}
 
+% FONT_PLACEHOLDER
 \begin{document}
 
 \begin{center}
@@ -481,28 +487,29 @@ CS 224N: Natural Language Processing (Winter 2024)
 \usepackage{paracol}
 
 \definecolor{sidebar}{RGB}{30,41,59}
-\definecolor{accent}{RGB}{20,184,166}
+\definecolor{primary}{HTML}{14B8A6}
 \definecolor{lightgray}{RGB}{241,245,249}
 
-\titleformat{\section}{\normalsize\bfseries\color{accent}\uppercase}{}{0em}{}
+\titleformat{\section}{\normalsize\bfseries\color{primary}\uppercase}{}{0em}{}
 \titlespacing{\section}{0pt}{8pt}{4pt}
 
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
 \setlength{\columnsep}{20pt}
 
+% FONT_PLACEHOLDER
 \begin{document}
 
 % Header spanning full width
 \begin{center}
     {\LARGE\bfseries YOUR NAME}\\[4pt]
-    {\color{accent}Software Engineer}\\[6pt]
+    {\color{primary}Software Engineer}\\[6pt]
     your.email@example.com $\bullet$ (555) 123-4567 $\bullet$ City, State\\
     \href{https://linkedin.com/in/you}{LinkedIn} $\bullet$ \href{https://github.com/you}{GitHub}
 \end{center}
 
 \vspace{10pt}
-\noindent\textcolor{accent}{\rule{\textwidth}{1pt}}
+\noindent\textcolor{primary}{\rule{\textwidth}{1pt}}
 \vspace{10pt}
 
 \begin{paracol}{2}
@@ -606,19 +613,20 @@ Spanish (Conversational)
 \usepackage{titlesec}
 \usepackage{xcolor}
 
-\definecolor{sales}{RGB}{234,88,12}
+\definecolor{primary}{HTML}{EA580C}
 \definecolor{dark}{RGB}{30,30,30}
 
-\titleformat{\section}{\large\bfseries\color{sales}}{}{0em}{}[\color{sales}\titlerule]
+\titleformat{\section}{\large\bfseries\color{primary}}{}{0em}{}[\color{primary}\titlerule]
 \titlespacing{\section}{0pt}{12pt}{6pt}
 
 \pagestyle{empty}
 
+% FONT_PLACEHOLDER
 \begin{document}
 
 \begin{center}
     {\LARGE\bfseries YOUR NAME}\\[4pt]
-    {\large\color{sales}Senior Sales Executive | Revenue Growth Expert}\\[8pt]
+    {\large\color{primary}Senior Sales Executive | Revenue Growth Expert}\\[8pt]
     your.email@example.com $\bullet$ (555) 123-4567 $\bullet$ New York, NY\\
     \href{https://linkedin.com/in/you}{LinkedIn Profile}
 \end{center}
@@ -626,7 +634,7 @@ Spanish (Conversational)
 \section{Career Highlights}
 \begin{center}
 \begin{tabular}{ccc}
-    \textbf{\color{sales}\$15M+} & \textbf{\color{sales}180\%} & \textbf{\color{sales}500+} \\
+    \textbf{\color{primary}\$15M+} & \textbf{\color{primary}180\%} & \textbf{\color{primary}500+} \\
     Revenue Generated & Quota Achievement & Deals Closed \\
 \end{tabular}
 \end{center}
@@ -683,27 +691,28 @@ Fortune 500 companies.
 \usepackage{xcolor}
 \usepackage{tikz}
 
-\definecolor{pink}{RGB}{236,72,153}
+\definecolor{primary}{HTML}{EC4899}
 \definecolor{purple}{RGB}{168,85,247}
 \definecolor{dark}{RGB}{24,24,27}
 
-\titleformat{\section}{\large\bfseries\color{pink}}{}{0em}{}
+\titleformat{\section}{\large\bfseries\color{primary}}{}{0em}{}
 \titlespacing{\section}{0pt}{10pt}{6pt}
 
 \pagestyle{empty}
 
+% FONT_PLACEHOLDER
 \begin{document}
 
 % Gradient-style header (simulated)
 \noindent
 \begin{tikzpicture}[remember picture, overlay]
-    \fill[left color=pink, right color=purple, opacity=0.1] 
+    \fill[left color=primary, right color=purple, opacity=0.1] 
         (-1,1) rectangle (\paperwidth+1,-2.5);
 \end{tikzpicture}
 
 \begin{center}
     {\Huge\bfseries\color{dark} YOUR NAME}\\[6pt]
-    {\Large\color{pink} Product Designer}\\[10pt]
+    {\Large\color{primary} Product Designer}\\[10pt]
     \href{https://yourportfolio.design}{yourportfolio.design} $\bullet$
     \href{mailto:hello@yourname.design}{hello@yourname.design} $\bullet$
     San Francisco
@@ -738,11 +747,11 @@ to create experiences that are both beautiful and functional.
 
 \section{Featured Work}
 
-\textbf{\color{pink}Financial App Redesign} -- Complete overhaul of mobile banking experience\\
+\textbf{\color{primary}Financial App Redesign} -- Complete overhaul of mobile banking experience\\
 \textit{Result: 4.8 App Store rating, 45\% increase in daily active users}
 
 \vspace{4pt}
-\textbf{\color{pink}Design System} -- Built component library for enterprise SaaS\\
+\textbf{\color{primary}Design System} -- Built component library for enterprise SaaS\\
 \textit{Result: 60\% faster design-to-dev handoff, adopted by 8 product teams}
 
 \section{Skills \& Tools}
@@ -771,6 +780,7 @@ to create experiences that are both beautiful and functional.
 \pagestyle{empty}
 \setlength{\parindent}{0pt}
 
+% FONT_PLACEHOLDER
 \begin{document}
 
 \begin{center}
@@ -865,6 +875,7 @@ GPA: 3.7/4.0 | Dean's List (6 semesters)\\
 
 \pagestyle{empty}
 
+% FONT_PLACEHOLDER
 \begin{document}
 
 \begin{center}
@@ -919,6 +930,7 @@ Expert in architecting scalable backends with Node.js/Go and crafting intuitive 
 
 \pagestyle{empty}
 
+% FONT_PLACEHOLDER
 \begin{document}
 
 \begin{center}

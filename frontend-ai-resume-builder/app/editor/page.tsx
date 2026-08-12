@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { AIAnalysisCard } from "@/components/ai-analysis-card"
+import { TemplateSettings } from "@/components/template-settings"
 import {
   Dialog,
   DialogContent,
@@ -375,6 +376,11 @@ function EditorContent() {
                 />
               </DialogContent>
             </Dialog>
+
+            <TemplateSettings 
+              latex={resumeCode} 
+              onUpdate={(newLatex) => setValue("resumeCode", newLatex, { shouldDirty: true })} 
+            />
 
             <Button 
               variant="outline" 
